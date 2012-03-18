@@ -2,16 +2,42 @@
 <%= link_to "My Blog", posts_path %>
 
 <br />
+<br />
+
+<%= form_tag("/", :method => "get") do %>
+	<%= label_tag :symbol %>
+	<%= text_field_tag :symbol %>
+
+	<%= submit_tag "Get Data" %>
+	
+	<br />
+	<br />
+
+
+<% if params["symbol"] != nil %>
 
 <%
 
-require 'yahoofinance'
+$temp = Array.new
 
-YahooFinance::get_historical_quotes_days('YHOO',30) do |row|
-	$tempstring = "YHOO,#{row.join(',')}"
+%>
+	
+<%
+
+YahooFinance::get_historical_quotes_days(params["symbol"],2800) do |row|
+	$temp.push Float(row[6])
 %>
 
-<%= $tempstring %>
+<% end %>
+
+
+<br />
+<%= image_tag(Gchart.line(:data => $temp)) %>
 <br />
 
+
 <% end %>
+<% end %>
+
+
+
