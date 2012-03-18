@@ -32,7 +32,7 @@ YahooFinance::get_historical_quotes_days(params["symbol"],2800) do |row|
 
 
 <br />
-<%= image_tag(Gchart.line(:data => $temp)) %>
+<%= image_tag(Gchart.line(:data => $temp.reverse)) %>
 <br />
 
 
