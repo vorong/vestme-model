@@ -1,2 +1,17 @@
 <h1>Hello, Rails!</h1>
 <%= link_to "My Blog", posts_path %>
+
+<br />
+
+<%
+
+require 'yahoofinance'
+
+YahooFinance::get_historical_quotes_days('YHOO',30) do |row|
+	$tempstring = "YHOO,#{row.join(',')}"
+%>
+
+<%= $tempstring %>
+<br />
+
+<% end %>
