@@ -1,9 +1,37 @@
-<h1>Hello, Rails!</h1>
+<!--<h1>Hello, Rails!</h1>
 <%= link_to "My Blog", posts_path %>
+-->
 
-<br />
-<br />
 
+
+<%
+
+def ghq_weekly(symbol, num)
+	$count = 0;
+	$dates = Array.new
+	$values = Array.new
+	$retval = Array.new
+
+	YahooFinance::get_historical_quotes(symbol,
+											Date.parse( '2006-10-20' ), 
+	                                      	Date.today()) do |row|
+		if $count == 1
+			$values.push Float(row[4])
+			$dates.push row[0]
+			$count +=1
+		elsif $count == 4
+			$count = 0
+		else
+			$count += 1
+		end
+	end
+	
+	$retval = [$dates.reverse, $values.reverse]
+end
+
+%>
+
+<!-- 
 <%= form_tag("/", :method => "get") do %>
 	<%= label_tag :symbol %>
 	<%= text_field_tag :symbol %>
@@ -12,32 +40,145 @@
 	
 	<br />
 	<br />
+-->
 
-
-<% if params["symbol"] != nil %>
+<% if 1 #params["symbol"] != nil %>
 
 <%
 
-$temp = Array.new
+$usersymbolvalues = nil
+$usersymboldates = nil
+$sp500values = nil
+$sp500dates = nil
+$SPYvalues = nil
+$SPYdates = nil
+$EFAvalues = nil
+$EFAdates = nil
+$IEFvalues = nil
+$IEFdates = nil
+$FXFvalues = nil
+$FXFdates = nil
+
+$usersymbolvalues = ghq_weekly(params["symbol"], 2000)[1]
+$usersymboldates = ghq_weekly(params["symbol"], 2000)[0]
+$sp500values = ghq_weekly("^GSPC", 2000)[1]#.map {|x| x/10 }
+$sp500dates = ghq_weekly("^GSPC", 2000)[0]
+$SPYvalues = ghq_weekly("SPY", 2000)[1]
+$SPYdates = ghq_weekly("SPY", 2000)[0]
+$EFAvalues = ghq_weekly("EFA", 2000)[1]
+$EFAdates = ghq_weekly("EFA", 2000)[0]
+$IEFvalues = ghq_weekly("IEF", 2000)[1]
+$IEFdates = ghq_weekly("IEF", 2000)[0]
+$FXFvalues = ghq_weekly("FXF", 2000)[1]
+$FXFdates = ghq_weekly("FXF", 2000)[0]
+
+$account1money = 100.00
+$account2money = 100.00
+$combo = Array.new
+$sp500array = Array.new
+
+$combo.push $account1money
+$sp500array.push $account2money
 
 %>
+
+
+<%
+
+$count = 1
+while $count < $sp500values.count do
+	%>
+<!--
+	<p>
+	<%= $SPYtotal = $SPYvalues[$count] - $SPYvalues[$count - 1] %><br />
+	<%= $EFAtotal = $EFAvalues[$count] - $EFAvalues[$count - 1] %><br />
+	<%= $IEFtotal = $IEFvalues[$count] - $IEFvalues[$count - 1] %><br />
+	<%= $FXFtotal = $FXFvalues[$count] - $FXFvalues[$count - 1] %><br />
+	</p>
+
+	<p>
+	<%= $SPYreturns = $SPYtotal / $SPYvalues[$count - 1] %><br />
+	<%= $EFAreturns = $EFAtotal / $EFAvalues[$count - 1] %><br />
+	<%= $IEFreturns = $IEFtotal / $IEFvalues[$count - 1] %><br />
+	<%= $FXFreturns = $FXFtotal / $FXFvalues[$count - 1] %><br />
+	</p>
+
+	<%= $combinedpercent = 0.25 * $SPYreturns +
+	 						0.25 * $EFAreturns +
+							0.25 * $IEFreturns +
+							0.25 * $FXFreturns %><br />
+-->
+	<% 
+		$account1money = $account1money * (1 + $combinedpercent) 
+		$combo.push $account1money
+		$sp500total = $sp500values[$count] - $sp500values[$count - 1]
+		$sp500returns = $sp500total / $sp500values[$count - 1]
+		$account2money = $account2money * (1 + $sp500returns)
+		$sp500array.push $account2money
+	%>
+<!--
+	<%= $account1money.round(2) %><br />
+-->
 	
-<%
+	<%
+	$count += 1
+end
 
-YahooFinance::get_historical_quotes_days(params["symbol"],2800) do |row|
-	$temp.push Float(row[6])
+
 %>
 
-<% end %>
-
-
 <br />
-<%= image_tag(Gchart.line(:data => $temp.reverse)) %>
+<%= image_tag(Gchart.line(
+					#:data => $sp500.reverse
+					:data => [$combo, $sp500array], 
+					:line_colors => "FF0000,00FF00", 
+					:size => (size = '600x400'),
+					#:axis_with_labels => ['x','y'],
+					#:axis_labels => ['2009','2010','2011','2012']
+					)) %>
 <br />
 
-
+<p>
+Green line is $100 of ^GSPC.<br />
+Red line is $100 of equal weighting of SPY, EFA, IEF, and FXF.
+</p>
 <% end %>
 <% end %>
 
+<!--
+<p>
+	<%= $sp500dates %>
+</p>
 
 
+<p>
+	<%= $SPYdates.count %>
+</p>
+<p>
+	<%= $EFAdates.count %>
+</p>
+<p>
+	<%= $IEFdates.count %>
+</p>
+<p>
+	<%= $FXFdates.count %>
+</p>
+
+
+<p>
+	<%= $sp500values %>
+</p>
+
+<p>
+	<%= $SPYvalues %>
+</p>
+<p>
+	<%= $EFAvalues %>
+</p>
+<p>
+	<%= $IEFvalues %>
+</p>
+<p>
+	<%= $FXFvalues %>
+</p>
+-->
