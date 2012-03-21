@@ -1,184 +1,43 @@
-<!--<h1>Hello, Rails!</h1>
-<%= link_to "My Blog", posts_path %>
--->
+<% if params['commit'] == nil %>
+<p>Compare against S&amp;P 500 using equal weighting.  Select the symbols to include and click compare.</p>
+<%= form_tag('/', :method => :get) do %>
+	<% @all_symbols.each do |symbol|
+		$symbol_label = symbol
+		if @default_symbols.include?($symbol_label) %> 
+			<%= check_box_tag "#$symbol_label", 1, true %>
+			<%= label_tag "#$symbol_label", "#$symbol_label" %>		
+		<% else %>	
+			<%= check_box_tag "#$symbol_label" %>
+			<%= label_tag "#$symbol_label", "#$symbol_label" %>
+		<% end %> 
+	<% end %>
+	<%= submit_tag 'Compare' %>
+<% end %>	
 
+<% else 
 
-
-<%
-
-def ghq_weekly(symbol, num)
-	$count = 0;
-	$dates = Array.new
-	$values = Array.new
-	$retval = Array.new
-
-	YahooFinance::get_historical_quotes(symbol,
-											Date.parse( '2006-10-20' ), 
-	                                      	Date.today()) do |row|
-		if $count == 1
-			$values.push Float(row[4])
-			$dates.push row[0]
-			$count +=1
-		elsif $count == 4
-			$count = 0
-		else
-			$count += 1
-		end
+# Get list of selected symbols
+selected_symbols = Array.new
+@all_symbols.each do |symbol|
+	if params[symbol]
+		selected_symbols.push symbol
 	end
-	
-	$retval = [$dates.reverse, $values.reverse]
 end
 
-%>
+selected_returns = get_equal_weighting_returns(selected_symbols)
+sp500_returns = get_equal_weighting_returns(['^GSPC']) %>
 
-<!-- 
-<%= form_tag("/", :method => "get") do %>
-	<%= label_tag :symbol %>
-	<%= text_field_tag :symbol %>
-
-	<%= submit_tag "Get Data" %>
-	
-	<br />
-	<br />
--->
-
-<% if 1 #params["symbol"] != nil %>
-
-<%
-
-$usersymbolvalues = nil
-$usersymboldates = nil
-$sp500values = nil
-$sp500dates = nil
-$SPYvalues = nil
-$SPYdates = nil
-$EFAvalues = nil
-$EFAdates = nil
-$IEFvalues = nil
-$IEFdates = nil
-$FXFvalues = nil
-$FXFdates = nil
-
-$usersymbolvalues = ghq_weekly(params["symbol"], 2000)[1]
-$usersymboldates = ghq_weekly(params["symbol"], 2000)[0]
-$sp500values = ghq_weekly("^GSPC", 2000)[1]#.map {|x| x/10 }
-$sp500dates = ghq_weekly("^GSPC", 2000)[0]
-$SPYvalues = ghq_weekly("SPY", 2000)[1]
-$SPYdates = ghq_weekly("SPY", 2000)[0]
-$EFAvalues = ghq_weekly("EFA", 2000)[1]
-$EFAdates = ghq_weekly("EFA", 2000)[0]
-$IEFvalues = ghq_weekly("IEF", 2000)[1]
-$IEFdates = ghq_weekly("IEF", 2000)[0]
-$FXFvalues = ghq_weekly("FXF", 2000)[1]
-$FXFdates = ghq_weekly("FXF", 2000)[0]
-
-$account1money = 100.00
-$account2money = 100.00
-$combo = Array.new
-$sp500array = Array.new
-
-$combo.push $account1money
-$sp500array.push $account2money
-
-%>
-
-
-<%
-
-$count = 1
-while $count < $sp500values.count do
-	%>
-<!--
-	<p>
-	<%= $SPYtotal = $SPYvalues[$count] - $SPYvalues[$count - 1] %><br />
-	<%= $EFAtotal = $EFAvalues[$count] - $EFAvalues[$count - 1] %><br />
-	<%= $IEFtotal = $IEFvalues[$count] - $IEFvalues[$count - 1] %><br />
-	<%= $FXFtotal = $FXFvalues[$count] - $FXFvalues[$count - 1] %><br />
-	</p>
-
-	<p>
-	<%= $SPYreturns = $SPYtotal / $SPYvalues[$count - 1] %><br />
-	<%= $EFAreturns = $EFAtotal / $EFAvalues[$count - 1] %><br />
-	<%= $IEFreturns = $IEFtotal / $IEFvalues[$count - 1] %><br />
-	<%= $FXFreturns = $FXFtotal / $FXFvalues[$count - 1] %><br />
-	</p>
-
-	<%= $combinedpercent = 0.25 * $SPYreturns +
-	 						0.25 * $EFAreturns +
-							0.25 * $IEFreturns +
-							0.25 * $FXFreturns %><br />
--->
-	<% 
-		$account1money = $account1money * (1 + $combinedpercent) 
-		$combo.push $account1money
-		$sp500total = $sp500values[$count] - $sp500values[$count - 1]
-		$sp500returns = $sp500total / $sp500values[$count - 1]
-		$account2money = $account2money * (1 + $sp500returns)
-		$sp500array.push $account2money
-	%>
-<!--
-	<%= $account1money.round(2) %><br />
--->
-	
-	<%
-	$count += 1
-end
-
-
-%>
-
-<br />
 <%= image_tag(Gchart.line(
-					#:data => $sp500.reverse
-					:data => [$combo, $sp500array], 
+					:data => [selected_returns, sp500_returns], 
 					:line_colors => "FF0000,00FF00", 
 					:size => (size = '600x400'),
-					#:axis_with_labels => ['x','y'],
-					#:axis_labels => ['2009','2010','2011','2012']
 					)) %>
-<br />
 
 <p>
 Green line is $100 of ^GSPC.<br />
-Red line is $100 of equal weighting of SPY, EFA, IEF, and FXF.
+Red line is $100 of equal weighting of <%= selected_symbols %>.
+</p>
+<p>
+<%= link_to 'Start Over', '/' %>
 </p>
 <% end %>
-<% end %>
-
-<!--
-<p>
-	<%= $sp500dates %>
-</p>
-
-
-<p>
-	<%= $SPYdates.count %>
-</p>
-<p>
-	<%= $EFAdates.count %>
-</p>
-<p>
-	<%= $IEFdates.count %>
-</p>
-<p>
-	<%= $FXFdates.count %>
-</p>
-
-
-<p>
-	<%= $sp500values %>
-</p>
-
-<p>
-	<%= $SPYvalues %>
-</p>
-<p>
-	<%= $EFAvalues %>
-</p>
-<p>
-	<%= $IEFvalues %>
-</p>
-<p>
-	<%= $FXFvalues %>
-</p>
--->
