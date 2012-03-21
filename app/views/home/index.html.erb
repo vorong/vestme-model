@@ -11,7 +11,9 @@
 			<%= label_tag "#$symbol_label", "#$symbol_label" %>
 		<% end %> 
 	<% end %>
-	<%= submit_tag 'Compare' %>
+	<%= submit_tag 'Compare' %><br /><br />
+	<%= check_box_tag 'verbose_info' %>
+	<%= label_tag 'verbose_info', 'Show Verbose Calculation Detail' %>
 <% end %>	
 
 <% else 
@@ -24,8 +26,9 @@ selected_symbols = Array.new
 	end
 end
 
-selected_returns = get_equal_weighting_returns(selected_symbols)
-sp500_returns = get_equal_weighting_returns(['^GSPC']) %>
+# Calling selected_returns second so that it's values remain in instance variables for verbose output.
+sp500_returns = get_equal_weighting_returns(['^GSPC'])
+selected_returns = get_equal_weighting_returns(selected_symbols) %>
 
 <%= image_tag(Gchart.line(
 					:data => [selected_returns, sp500_returns], 
@@ -40,4 +43,44 @@ Red line is $100 of equal weighting of <%= selected_symbols %>.
 <p>
 <%= link_to 'Start Over', '/' %>
 </p>
+<% end %>
+
+<% if params['verbose_info'] %>
+<table border="1">
+	<tr>
+		<td></td>
+		<td colspan=<%= selected_symbols.count %>>Closing Prices</td>
+		<td>Combined $ Return</td>
+	</tr>
+	<tr>
+		<td>Date</td>
+		<% selected_symbols.each do |symbol| %>
+		<td>c<%= symbol %></td>
+		<% end %>
+		<td>Combo</td>
+	</tr>
+	
+<% 
+i = 0
+j = 0
+
+while i < @all_quotes[0].count do 
+	%>
+	<tr>
+		<td><%= @all_quote_dates[0][i] %></td>
+	<%
+	while j < @all_quotes.count do
+		%>
+		<td><%= @all_quotes[j][i] %></td>
+		<%
+		j += 1
+	end
+	%>
+		<td><%= selected_returns[i].round(2) %></td>
+	</tr>
+	<%
+	i += 1
+	j = 0
+end %>
+</table>
 <% end %>
