@@ -7,10 +7,12 @@ module HomeHelper
   	YahooFinance::get_historical_quotes(symbol, 
   	                                    Date.parse('2006-10-20'), 
   	                                    Date.today()) do |row|
-  		if count == 4
+  		if count == 0
   			quotes.push Float(row[4])
   			quote_dates.push row[0]
-  			count = 0
+  			count += 1
+			elsif count == 4
+			  count = 0
   		else
   			count += 1
   		end
@@ -22,6 +24,10 @@ module HomeHelper
   def get_equal_weighting_returns(symbols)
     @all_quotes = Array.new
     @all_quote_dates = Array.new
+    @all_total_returns = Array.new
+    @all_percent_returns = Array.new
+    @all_weighted_returns = Array.new
+    @all_combined_returns = Array.new
     
     # Get historical quotes for each symbol
     symbols.each do |symbol|
@@ -49,6 +55,10 @@ module HomeHelper
     j = 0
     returns = Array.new
     returns.push 100.0
+    @all_total_returns.push Array.new(symbols.count, 0)
+    @all_percent_returns.push Array.new(symbols.count, 0)
+    @all_weighted_returns.push Array.new(symbols.count, 0)
+    @all_combined_returns.push 0
 
     while i < @all_quotes[0].count
     	total_returns = Array.new
@@ -65,6 +75,10 @@ module HomeHelper
       weighted_returns = percent_returns.map {|x| x / @all_quotes.count}
       combined_return = weighted_returns.inject {|sum, x| sum + x}
 
+      @all_total_returns.push total_returns
+      @all_percent_returns.push percent_returns
+      @all_weighted_returns.push weighted_returns
+      @all_combined_returns.push combined_return
     	returns.push (1 + combined_return) * returns[i - 1]
 
     	i += 1
@@ -77,6 +91,10 @@ module HomeHelper
   def get_custom_weighting_returns(symbols, symbols_weights)
     @all_quotes = Array.new
     @all_quote_dates = Array.new
+    @all_total_returns = Array.new
+    @all_percent_returns = Array.new
+    @all_weighted_returns = Array.new
+    @all_combined_returns = Array.new
     
     # Get historical quotes for each symbol
     symbols.each do |symbol|
@@ -109,6 +127,10 @@ module HomeHelper
     j = 0
     returns = Array.new
     returns.push 100.0
+    @all_total_returns.push Array.new(symbols.count, 0)
+    @all_percent_returns.push Array.new(symbols.count, 0)
+    @all_weighted_returns.push Array.new(symbols.count, 0)
+    @all_combined_returns.push 0
 
     while i < @all_quotes[0].count
     	total_returns = Array.new
@@ -129,6 +151,10 @@ module HomeHelper
       end
       combined_return = weighted_returns.inject {|sum, x| sum + x}
 
+      @all_total_returns.push total_returns
+      @all_percent_returns.push percent_returns
+      @all_weighted_returns.push weighted_returns
+      @all_combined_returns.push combined_return
     	returns.push (1 + combined_return) * returns[i - 1]
 
     	i += 1
