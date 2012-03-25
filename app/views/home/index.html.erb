@@ -1,16 +1,29 @@
+<script type="text/javascript" src="http://www.shawnolson.net/scripts/public_smo_scripts.js"></script>
+
 <% if params['commit'] == nil %>
 <p>Compare against S&amp;P 500 using equal weighting.  Select the symbols to include and click compare.</p>
 <%= form_tag('/', :method => :get) do %>
-	<% @all_symbols.each do |symbol|
-		$symbol_label = symbol
-		if @default_symbols.include?($symbol_label) %> 
-			<%= check_box_tag "#$symbol_label", 1, true %>
-			<%= label_tag "#$symbol_label", "#$symbol_label" %>		
+<%= radio_button_tag 'weighting', 'equal', true, :onclick => "changecss('.weight_field','visibility','hidden')" %>
+<%= label_tag 'weighting_equal', 'Equal Weighting' %><br />
+<%= radio_button_tag 'weighting', 'custom', false, :onclick => "changecss('.weight_field','visibility','visible')" %>
+<%= label_tag 'weighting_custom', 'Custom Weighting' %><br /><br />
+<table border="0">
+	<% @all_symbols.each do |symbol| %>
+	<tr>
+		<td>
+		<% if @default_symbols.include?(symbol) %>
+			<%= check_box_tag symbol, 1, true %>
 		<% else %>	
-			<%= check_box_tag "#$symbol_label" %>
-			<%= label_tag "#$symbol_label", "#$symbol_label" %>
-		<% end %> 
+			<%= check_box_tag symbol %>
+		<% end %>
+			<%= label_tag symbol, symbol %>
+		</td>
+		<td class="weight_field">
+			<%= text_field_tag symbol+'_weight' %>
+		</td>
+	</tr>
 	<% end %>
+</table>
 	<%= submit_tag 'Compare' %><br /><br />
 	<%= check_box_tag 'verbose_info' %>
 	<%= label_tag 'verbose_info', 'Show Verbose Calculation Detail' %>
@@ -20,6 +33,7 @@
 
 # Get list of selected symbols
 selected_symbols = Array.new
+selected_symbols_weights = Array.new
 @all_symbols.each do |symbol|
 	if params[symbol]
 		selected_symbols.push symbol
@@ -28,7 +42,23 @@ end
 
 # Calling selected_returns second so that it's values remain in instance variables for verbose output.
 sp500_returns = get_equal_weighting_returns(['^GSPC'])
-selected_returns = get_equal_weighting_returns(selected_symbols) %>
+
+if params['weighting'] == 'equal'
+	selected_returns = get_equal_weighting_returns(selected_symbols) 
+else
+	selected_symbols.each do |symbol|
+		symbol_weight = params[symbol+'_weight']
+		if symbol_weight == ""
+			raise "Error: weight for " + symbol + " is empty."
+		elsif symbol_weight.to_f <= 0.0
+			raise "Error: weight for " + symbol + " is either not valid.  It must be number greater 0."
+		else
+			selected_symbols_weights.push symbol_weight.to_f
+		end
+		selected_symbols
+	end
+	selected_returns = get_custom_weighting_returns(selected_symbols, selected_symbols_weights) 
+end	%>
 
 <%= image_tag(Gchart.line(
 					:data => [selected_returns, sp500_returns], 
