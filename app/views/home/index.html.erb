@@ -1,7 +1,7 @@
 <script type="text/javascript" src="http://www.shawnolson.net/scripts/public_smo_scripts.js"></script>
 
 <% if params['commit'] == nil %>
-<p>Compare against S&amp;P 500 using equal weighting.  Select the symbols to include and click compare.</p>
+<p>Compare against S&amp;P 500.  Choose either Equal or Custom weighting, select the symbols to include, and click Compare.  If choosing custom, add the percent weighting for the selected symbol to the right.  Note: percentages must add up to 100.</p>
 <%= form_tag('/', :method => :get) do %>
 <%= radio_button_tag 'weighting', 'equal', true, :onclick => "changecss('.weight_field','visibility','hidden')" %>
 <%= label_tag 'weighting_equal', 'Equal Weighting' %><br />
