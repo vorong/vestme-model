@@ -10,7 +10,7 @@
 <table border="0">
 	<% @all_symbols.each do |symbol| %>
 	<tr>
-		<td>
+		<td width="60">
 		<% if @default_symbols.include?(symbol) %>
 			<%= check_box_tag symbol, 1, true %>
 		<% else %>	
